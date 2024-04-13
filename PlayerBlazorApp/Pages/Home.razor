@@ -1,0 +1,158 @@
+﻿@page "/"
+@using PlayerBlazorApp.Models
+@using PlayerBlazorApp.Services
+
+<PageTitle>Home</PageTitle>
+
+@* Reproductor *@
+
+<div class="d-flex justify-content-center mb-2">
+    <iframe src="@YoutubeId" width="800" height="400" frameborder="0" allowfullscreen></iframe>
+</div>
+
+
+@* botones *@
+
+<div class="d-flex justify-content-center mb-2">
+    <button @onclick="First" class="me-2 btn btn-primary">Primero</button>
+    <button @onclick="Before" class="me-2 btn btn-success">Anterior</button>
+    <button @onclick="Next" class="me-2 btn btn-secondary">Siguiente</button>
+    <button @onclick="Last" class="me-2 btn btn-warning">Final</button>
+</div>
+
+
+@* para guardar *@
+
+<div>
+    <label>Video a Guardar</label>
+    <input type="text" class="form-control mb-2" @bind-value="YoutubeLink" />
+    <button class="btn btn-success" @onclick="SaveOnHead">Guardar al inicio</button>
+    <button class="btn btn-primary" @onclick="SaveOnTail">Guardar al final</button>
+    <button class="btn btn-danger" @onclick="DeleteOnHead">Eliminar al inicio</button>
+    <button class="btn btn-danger" @onclick="DeleteOnTail">Eliminar al final</button>
+</div>
+<div>
+    <label>Posición de referencia</label>
+    <input type="text" class="form-control mb-2" @bind="PosicionNodoExistente" />
+    <button class="btn btn-success" @onclick="SaveInSpecificPosition">Guardar en posición</button>
+    <button class="btn btn-danger" @onclick="DeleteInSpecificPosition">Eliminar en posición</button>
+
+</div>
+
+<p>@Mensaje</p>
+
+@code{
+    DoubleLinkedList lista;
+
+    string YoutubeLink = string.Empty;
+    string YoutubeId = string.Empty;
+    string Mensaje = string.Empty;
+    public string PosicionNodoExistente { get; set; } // Propiedad para almacenar pocicion a manipular
+
+    protected override void OnInitialized()
+    {
+        lista = new DoubleLinkedList();
+    }
+
+    void PlayVideo()
+    {
+        if (lista.NodoActual is not null)
+        {
+            YoutubeLink = lista.NodoActual.Informacion;
+
+            var videoId = GetVideoId(YoutubeLink);
+
+            if (!string.IsNullOrEmpty(videoId))
+            {
+                YoutubeId = $"https://www.youtube.com/embed/{videoId}";
+            }
+
+        }
+
+
+    }
+
+    string GetVideoId(string link)
+    {
+        //creamos un objeto de tipo Uri
+        var uri = new Uri(link);
+
+        // obtenemos el query string del uri
+        var query = uri.Query;
+
+        // obtenemos todos los parametros del query string
+        var queryparams = System.Web.HttpUtility.ParseQueryString(query);
+
+        var videoId = queryparams["v"];
+
+        return videoId;
+    }
+
+    void First()
+    {
+        lista.NodoActual = lista.PrimerNodo;
+        PlayVideo();
+    }
+
+    void Before()
+    {
+        lista.Anterior();
+        PlayVideo();
+    }
+
+    void Next()
+    {
+        lista.Siguiente();
+        PlayVideo();
+
+    }
+
+    void Last()
+    {
+        lista.NodoActual = lista.UltimoNodo;
+        PlayVideo();
+    }
+
+    //Guardar nodos
+
+    void SaveOnHead()
+    {
+        var nuevoNodo = new Nodo(YoutubeLink);
+        Mensaje = lista.AgregarNodoAlInicio(nuevoNodo);
+        PlayVideo();
+        YoutubeLink = string.Empty;
+    }
+
+    void SaveOnTail()
+    {
+        var nuevoNodo = new Nodo(YoutubeLink);
+        Mensaje = lista.AgregarNodoAlFinal(nuevoNodo);
+        PlayVideo();
+        YoutubeLink = string.Empty;
+    }
+    void SaveInSpecificPosition()
+    {
+        var nuevoNodo = new Nodo(YoutubeLink);
+        Mensaje = lista.AgregarNodoEnPosicion(Convert.ToInt32(PosicionNodoExistente), nuevoNodo);
+        PlayVideo();
+        YoutubeLink = string.Empty;
+    }
+
+    //Borrar Nodos
+
+    void DeleteOnHead()
+    {
+        Mensaje = lista.QuitarNodoAlInicio();
+    }
+
+    void DeleteOnTail()
+    {
+        Mensaje = lista.QuitarNodoAlFinal();
+    }
+
+    void DeleteInSpecificPosition()
+    {
+        Mensaje = lista.EliminarNodoEnPosicion(Convert.ToInt32(PosicionNodoExistente));
+    }
+
+}
